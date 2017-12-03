@@ -65,9 +65,9 @@ def calculate_cumulative_return(labels, pred):
     cr = []
     if len(labels) <= 0:
         return cr
-    cr.append(1. * (1. + labels[0] * (1 if pred[0]>0.5 else 0)))
+    cr.append(1. * (1. + labels[0] * (1 if pred[0]>0.2 else 0)))
     for l in range(1, len(labels)):
-        cr.append(cr[l-1] * (1 + labels[l] * (1 if pred[l]>0.5 else 0)))
+        cr.append(cr[l-1] * (1 + labels[l] * (1 if pred[l]>0.2 else 0)))
     for i in range(len(cr)):
         cr[i] = cr[i] - 1
     return cr
@@ -95,7 +95,7 @@ def evaluate_model(model_path, code, input_shape=input_shape):
     print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
     for i in range(1,len(test_set.labels)):
         print(str(round(test_set.labels[i]*100,3)) + "\t" + str(round(pred[i],2)) + "\t" + str(round(cr[i]*100,3)) + "\t" + str(round((cr[i]-cr[i-1])*100,3)) + "\t" + str(round(hold[i+1]*100,3)))
-    print('end')
+    print('endtrance')
 
 
 def make_model(input_shape, nb_epochs=1000, batch_size=128, lr=0.01, n_layers=1, n_hidden=16, rate_dropout=0.3):
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
         # make_model([20, 61], 3000, 512, lr=0.001)
         featuremain()
-        make_model(input_shape,500,256,lr=0.001)
+        make_model(input_shape,1000,256,lr=0.001)
         evaluate_model("model."+str(input_shape[0])+".best", code)
     elif operation == "predict":
         evaluate_model("model."+str(input_shape[0])+".best", code)

@@ -23,7 +23,7 @@ class ChartFeature(object):
     def __init__(self, selector):
         self.selector = selector
         # self.supported = {"ROCP", "OROCP", "HROCP", "LROCP", "MACD", "RSI", "VROCP", "BOLL", "MA", "VMA", "PRICE_VOLUME"}
-        self.supported = {"ROCP","PRICE_VOLUME"}
+        self.supported = {"ROCP","MACD","RSI"}
         self.feature = []
 
     def moving_extract(self, window=30, open_prices=None, close_prices=None, high_prices=None, low_prices=None,
@@ -384,7 +384,7 @@ def new_extract_feature(raw_data, selector, window=30, with_label=True, flatten=
                                                                       flatten=flatten)
         return moving_features, moving_labels
     else:
-        moving_features = chart_feature.moving_extract(window=window, open_prices=opens, close_prices=closes,
+        moving_features = chart_feature.new_moving_extract(window=window, open_prices=opens, close_prices=closes,
                                                        high_prices=highs, low_prices=lows, volumes=volumes,
                                                        with_label=with_label, flatten=flatten)
         return moving_features

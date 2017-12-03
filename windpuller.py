@@ -42,7 +42,7 @@ class WindPuller(object):
         # self.model.add(BatchNormalization(axis=-1, moving_mean_initializer=Constant(value=0.5),
         #               moving_variance_initializer=Constant(value=0.25)))
         self.model.add(BatchRenormalization(axis=-1, beta_init=Constant(value=0.5)))
-        self.model.add(Activation('relu_limited'))
+        self.model.add(Activation('tanh'))
         opt = RMSprop(lr=lr)
         self.model.compile(loss=loss,
                       optimizer=opt,

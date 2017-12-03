@@ -20,19 +20,19 @@ from dataset import DataSet
 from chart import extract_feature,new_extract_feature
 import numpy
 
-_testcode = '600582'
+_testcode = '002456'
 # testcodes = ['600176','002594','000725','600582','600050','600036','002456','002415']
-testcodes = ['600582']
-trance_codes = ['sh','sz','hs300']
+testcodes = [_testcode]
+# trance_codes = ['sh','sz','hs300']
 # trance_codes = ['sh','hs300']
-# trance_codes = ['sz','sz50']
+trance_codes = ['sz','sz50']
 
 for i in range(len(trance_codes)):
     trance_codes[i] = trance_codes[i] +".csv"
 depend_features = len(trance_codes)
 
 #feature值是一定的,和talib有关
-input_shape = [60, (7+1+1)*len(trance_codes)]  # [length of time series, length of feature]
+input_shape = [60, (7+1+1+11)*len(trance_codes)]  # [length of time series, length of feature]
 
 if myvalue==1:
     dirpath = "dataset/myvalue/"
@@ -42,7 +42,7 @@ else:
 if myvalue==0:
     days_for_test = 700
 else:
-    days_for_test = 50
+    days_for_test = 36
 def extract_from_file(filepath, output_prefix):
     window = input_shape[0]
     fp = open("%s_feature.%s" % (output_prefix, window), "w")
