@@ -23,7 +23,7 @@ class ChartFeature(object):
     def __init__(self, selector):
         self.selector = selector
         # self.supported = {"ROCP", "OROCP", "HROCP", "LROCP", "MACD", "RSI", "VROCP", "BOLL", "MA", "VMA", "PRICE_VOLUME"}
-        self.supported = {"ROCP","MACD","RSI"}
+        self.supported = {"ROCP", "MACD"}
         self.feature = []
 
     def moving_extract(self, window=30, open_prices=None, close_prices=None, high_prices=None, low_prices=None,
@@ -94,7 +94,7 @@ class ChartFeature(object):
             # new_moving_labels.append(new_moving_labels[-1])
 
             for i in range(len(moving_labels)-2):
-                new_moving_labels.append(moving_labels[i]+moving_labels[i+1])
+                new_moving_labels.append(moving_labels[i]*0.66+moving_labels[i+1]*0.33)
             new_moving_labels.append(new_moving_labels[-1])
             return numpy.asarray(moving_features), numpy.asarray(new_moving_labels)
         else:

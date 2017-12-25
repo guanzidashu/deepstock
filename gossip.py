@@ -19,7 +19,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 
 from windpuller import WindPuller
 from dataset import DataSet
-from feature import extract_from_file,dirpath,input_shape,_testcode,featuremain
+from feature import extract_from_file,dirpath,input_shape,_testcode,featuremain,value,allcodes,values,days_for_test
 
 
 def read_ultimate(path, input_shape):
@@ -65,9 +65,9 @@ def calculate_cumulative_return(labels, pred):
     cr = []
     if len(labels) <= 0:
         return cr
-    cr.append(1. * (1. + labels[0] * (1 if pred[0]>0.2 else 0)))
+    cr.append(1. * (1. + labels[0] * (1 if pred[0]>value else 0)))
     for l in range(1, len(labels)):
-        cr.append(cr[l-1] * (1 + labels[l] * (1 if pred[l]>0.2 else 0)))
+        cr.append(cr[l-1] * (1 + labels[l] * (1 if pred[l]>value else 0)))
     for i in range(len(cr)):
         cr[i] = cr[i] - 1
     return cr
@@ -95,6 +95,10 @@ def evaluate_model(model_path, code, input_shape=input_shape):
     print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
     for i in range(1,len(test_set.labels)):
         print(str(round(test_set.labels[i]*100,3)) + "\t" + str(round(pred[i],2)) + "\t" + str(round(cr[i]*100,3)) + "\t" + str(round((cr[i]-cr[i-1])*100,3)) + "\t" + str(round(hold[i+1]*100,3)))
+        if i == len(test_set.labels)-1:
+            output = open('data.txt', 'a')
+            output.write("预计收益: "+str(round(cr[i]*100,3))+"持续持有收益: "+str(round(hold[i+1]*100,3))+"差别收益 :"+ str((round(cr[i]*100,3)) - (round(hold[i+1]*100,3)) )+"\n")
+            output.close()
     print('endtrance')
 
 
@@ -128,19 +132,39 @@ def make_model(input_shape, nb_epochs=1000, batch_size=128, lr=0.01, n_layers=1,
             fp.write('\n')
 
 if __name__ == '__main__':
-    code = _testcode
-    operation = "train"
-    
-    if len(sys.argv) > 1:
-        operation = sys.argv[1]
-    if operation == "train":
+    for i in range(len(values)):
+        for j in range(9):
+            for k in range(len(allcodes)):
+                value = values[i]
+                days_for_test = (j+1)*10
+                _testcode = allcodes[k]
+                output = open('data.txt', 'a')
+                output.write("当前股票: "+str(_testcode)+"测试天数: "+str(days_for_test)+"阈值 :"+ str(value)+"\n")
+                output.close()
+                code = _testcode
+                operation = "train"
 
-        # make_model([20, 61], 3000, 512, lr=0.001)
-        featuremain()
-        make_model(input_shape,1000,256,lr=0.001)
-        evaluate_model("model."+str(input_shape[0])+".best", code)
-    elif operation == "predict":
-        evaluate_model("model."+str(input_shape[0])+".best", code)
+                if len(sys.argv) > 1:
+                    operation = sys.argv[1]
+                if operation == "train":
 
-    else:
-        print("Usage: gossip.py [train | predict]")
+                # make_model([20, 61], 3000, 512, lr=0.001)
+                    featuremain()
+                    make_model(input_shape,500,256,lr=0.001,n_layers=2)
+                    evaluate_model("model."+str(input_shape[0])+".best", code)
+                elif operation == "predict":
+                    evaluate_model("model."+str(input_shape[0])+".best", code)
+
+                else:
+                    print("Usage: gossip.py [train | predict]")
+            output = open('data.txt', 'a')
+            output.write("\n当前股票: "+str(_testcode)+"结束\n")
+            output.close()
+        output = open('data.txt', 'a')
+        output.write("\n当前测试天数: "+str(days_for_test)+"结束\n")
+        output.close()
+    output = open('data.txt', 'a')
+    output.write("\n阈值: "+str(value)+"结束\n")
+    output.close()
+
+        
