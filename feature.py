@@ -22,6 +22,7 @@ import numpy
 
 
 
+
 value = -0.2
 values = [-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]
 
@@ -40,19 +41,15 @@ for i in range(len(trance_codes)):
 depend_features = len(trance_codes)
 
 #feature值是一定的,和talib有关
-input_shape = [60, (7+1+1+11-7+7-6-6+6)*len(trance_codes)]  # [length of time series, length of feature]
+input_shape_mine = [70, (7+1+1+11-7+7-6-6+6)*len(trance_codes)]  # [length of time series, length of feature]
 
-if myvalue==1:
-    dirpath = "dataset/myvalue/"
-else:
-    dirpath = "dataset/"
 
-if myvalue==0:
-    days_for_test = 700
-else:
-    days_for_test = 100
+dirpath = "dataset/myvalue/"
+
+days_for_test = 100
+
 def extract_from_file(filepath, output_prefix):
-    window = input_shape[0]
+    window = input_shape_mine[0]
     fp = open("%s_feature.%s" % (output_prefix, window), "w")
     lp = open("%s_label.%s" % (output_prefix, window), "w")
     fpt = open("%s_feature.test.%s" % (output_prefix, window), "w")
@@ -67,7 +64,7 @@ def extract_from_file(filepath, output_prefix):
 
     filepath = dataset_dir + "/" + _testcode +'.csv'
     raw_data_code = read_sample_data(filepath)
-    moving_feature, moving_label = extract_feature(raw_data=raw_data_code, selector=selector, window=input_shape[0],with_label=True, flatten=True)
+    moving_feature, moving_label = extract_feature(raw_data=raw_data_code, selector=selector, window=input_shape_mine[0],with_label=True, flatten=True)
     moving_labels = moving_label
     moving_features.append(moving_feature)
 
@@ -83,7 +80,7 @@ def extract_from_file(filepath, output_prefix):
             item = raw_data_dic[i.date]
             temparr.append(item)
         raw_data=temparr          
-        moving_feature, moving_label = extract_feature(raw_data=raw_data, selector=selector, window=input_shape[0],
+        moving_feature, moving_label = extract_feature(raw_data=raw_data, selector=selector, window=input_shape_mine[0],
                                                          with_label=True, flatten=True)
         print("feature extraction done, start writing to file...")
 
@@ -94,9 +91,9 @@ def extract_from_file(filepath, output_prefix):
     combine_features = []
     for i in range(moving_labels.shape[0]):
         temparr = []
-        for j in range(input_shape[0]):
+        for j in range(input_shape_mine[0]):
             for k in range(len(trance_codes)):
-                temparr += moving_features[k][i][j*input_shape[1]/len(trance_codes):(j+1)*input_shape[1]/len(trance_codes)]
+                temparr += moving_features[k][i][j*input_shape_mine[1]/len(trance_codes):(j+1)*input_shape_mine[1]/len(trance_codes)]
         combine_features.append(temparr)
 
     moving_features = combine_features
@@ -124,13 +121,20 @@ def extract_from_file(filepath, output_prefix):
     lpt.close()
 
 
+def test(rvalue,r_testcode,rdays_for_test):
+    global value,_testcode,days_for_test,testcodes
+    value=rvalue
+    _testcode=r_testcode
+    days_for_test=rdays_for_test
+    testcodes=[_testcode]
+
 # if __name__ == '__main__':
 def featuremain():
-
+    
     for testcode in testcodes:
     
         print(days_for_test)
-        window = input_shape[0]
+        window = input_shape_mine[0]
         fp = open("ultimate_feature.%s" % window, "w")
         lp = open("ultimate_label.%s" % window, "w")
         fpt = open("ultimate_feature.test.%s" % window, "w")
@@ -144,7 +148,7 @@ def featuremain():
 
         filepath = dataset_dir + "/" + testcode +'.csv'
         raw_data_code = read_sample_data(filepath)
-        moving_feature, moving_label = extract_feature(raw_data=raw_data_code, selector=selector, window=input_shape[0],with_label=True, flatten=True)
+        moving_feature, moving_label = extract_feature(raw_data=raw_data_code, selector=selector, window=input_shape_mine[0],with_label=True, flatten=True)
         moving_labels = moving_label
         moving_features.append(moving_feature)
 
@@ -160,7 +164,7 @@ def featuremain():
                 item = raw_data_dic[i.date]
                 temparr.append(item)
             raw_data=temparr          
-            moving_feature, moving_label = new_extract_feature(raw_data=raw_data, selector=selector, window=input_shape[0],
+            moving_feature, moving_label = new_extract_feature(raw_data=raw_data, selector=selector, window=input_shape_mine[0],
                                                          with_label=True, flatten=True)
             print("feature extraction done, start writing to file...")
 
@@ -171,9 +175,9 @@ def featuremain():
         combine_features = []
         for i in range(moving_labels.shape[0]):
             temparr = []
-            for j in range(input_shape[0]):
+            for j in range(input_shape_mine[0]):
                 for k in range(len(trance_codes)):
-                    temparr += moving_features[k][i][j*input_shape[1]/len(trance_codes):(j+1)*input_shape[1]/len(trance_codes)]
+                    temparr += moving_features[k][i][j*input_shape_mine[1]/len(trance_codes):(j+1)*input_shape_mine[1]/len(trance_codes)]
             combine_features.append(temparr)
 
         moving_features = combine_features

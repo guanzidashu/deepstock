@@ -20,15 +20,19 @@ from keras.optimizers import SGD, RMSprop
 from keras.models import load_model
 from keras.initializers import Constant
 import keras.backend.tensorflow_backend as KTF
-import tensorflow as tf
 
-KTF.set_session(tf.Session(config=tf.ConfigProto(device_count={'gpu':0})))
+
+# from keras.layers.core import K
+
+# K.set_learning_phase(1) #set learning phase
+# KTF.set_session(tf.Session(config=tf.ConfigProto(device_count={'gpu':0})))
 
 class WindPuller(object):
-    def __init__(self, input_shape, lr=0.01, n_layers=2, n_hidden=8, rate_dropout=0.1, loss='risk_estimation'):
+    def __init__(self, input_shape_mine, lr=0.01, n_layers=2, n_hidden=8, rate_dropout=0.1, loss='risk_estimation'):
+        # K.set_learning_phase(1)
         print("initializing..., learing rate %s, n_layers %s, n_hidden %s, dropout rate %s." %(lr, n_layers, n_hidden, rate_dropout))
         self.model = Sequential()
-        self.model.add(Dropout(rate=rate_dropout, input_shape=(input_shape[0], input_shape[1])))
+        self.model.add(Dropout(rate=rate_dropout, input_shape=(input_shape_mine[0], input_shape_mine[1])))
         for i in range(0, n_layers - 1):
             self.model.add(LSTM(n_hidden * 4, return_sequences=True, activation='tanh',
                                 recurrent_activation='hard_sigmoid', kernel_initializer='glorot_uniform',
@@ -48,10 +52,10 @@ class WindPuller(object):
                       optimizer=opt,
                       metrics=['stock_accuracy'])
 
-    def fit(self, x, y, batch_size=16, nb_epoch=100, verbose=1, callbacks=None,
+    def fit(self, x1, y1, batch_size=16, nb_epoch=100, verbose=1, callbacks=None,
             validation_split=0., validation_data=None, shuffle=True,
             class_weight=None, sample_weight=None, initial_epoch=0, **kwargs):
-        self.model.fit(x, y, batch_size, nb_epoch, verbose, callbacks,
+        self.model.fit(x1, y1, batch_size, nb_epoch, verbose, callbacks,
                        validation_split, validation_data, shuffle, class_weight, sample_weight,
                        initial_epoch, **kwargs)
 

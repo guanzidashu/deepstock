@@ -19,8 +19,14 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 
 from windpuller import WindPuller
 from dataset import DataSet
-from feature import extract_from_file,dirpath,input_shape,_testcode,featuremain,value,allcodes,values,days_for_test
-
+from feature import extract_from_file,dirpath,input_shape_mine,_testcode,featuremain,value,allcodes,values,days_for_test,test
+import time
+from os import listdir
+from os.path import isfile, join
+import os
+import tensorflow as tf
+curtime = time.strftime("%Y-%m-%d", time.localtime())
+filename = "data_"+curtime+".txt"
 
 def read_ultimate(path, input_shape):
     ultimate_features = numpy.loadtxt(path + "ultimate_feature." + str(input_shape[0]))
@@ -62,20 +68,24 @@ def read_ultimate(path, input_shape):
 
 
 def calculate_cumulative_return(labels, pred):
+    print("value: "+str(value))
+    print(type(value))
     cr = []
     if len(labels) <= 0:
         return cr
     cr.append(1. * (1. + labels[0] * (1 if pred[0]>value else 0)))
     for l in range(1, len(labels)):
+        # print("看这里 pre"+str(pred[l]) + "  lable:"+str(labels[l]) )
         cr.append(cr[l-1] * (1 + labels[l] * (1 if pred[l]>value else 0)))
     for i in range(len(cr)):
-        cr[i] = cr[i] - 1
+        cr[i] = cr[i] -1
+    print(cr)
     return cr
 
 
 
 
-def evaluate_model(model_path, code, input_shape=input_shape):
+def evaluate_model(model_path, code, input_shape=input_shape_mine):
     extract_from_file(dirpath, code)
     train_set, test_set = read_feature(".", input_shape, code)
     saved_wp = WindPuller(input_shape).load_model(model_path)
@@ -95,9 +105,9 @@ def evaluate_model(model_path, code, input_shape=input_shape):
     print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
     for i in range(1,len(test_set.labels)):
         print(str(round(test_set.labels[i]*100,3)) + "\t" + str(round(pred[i],2)) + "\t" + str(round(cr[i]*100,3)) + "\t" + str(round((cr[i]-cr[i-1])*100,3)) + "\t" + str(round(hold[i+1]*100,3)))
-        if i == len(test_set.labels)-1:
-            output = open('data.txt', 'a')
-            output.write("预计收益: "+str(round(cr[i]*100,3))+"持续持有收益: "+str(round(hold[i+1]*100,3))+"差别收益 :"+ str((round(cr[i]*100,3)) - (round(hold[i+1]*100,3)) )+"\n")
+        if i == len(test_set.labels)-2:
+            output = open(filename, 'a')
+            output.write("预计收益: "+str(round(cr[i]*100,3))+"  持续持有收益: "+str(round(hold[i+1]*100,3))+"  差别收益 :"+ str((round(cr[i]*100,3)) - (round(hold[i+1]*100,3)) )+"\n")
             output.close()
     print('endtrance')
 
@@ -105,7 +115,7 @@ def evaluate_model(model_path, code, input_shape=input_shape):
 def make_model(input_shape, nb_epochs=1000, batch_size=128, lr=0.01, n_layers=1, n_hidden=16, rate_dropout=0.3):
     model_path = 'model.%s' % input_shape[0]
     train_set, test_set = read_ultimate("./", input_shape)
-    wp = WindPuller(input_shape=input_shape, lr=lr, n_layers=n_layers, n_hidden=n_hidden, rate_dropout=rate_dropout)
+    wp = WindPuller(input_shape_mine=input_shape, lr=lr, n_layers=n_layers, n_hidden=n_hidden, rate_dropout=rate_dropout)
     wp.fit(train_set.images, train_set.labels, batch_size=batch_size,
            nb_epoch=nb_epochs, shuffle=True, verbose=1,
            validation_data=(test_set.images, test_set.labels),
@@ -131,40 +141,94 @@ def make_model(input_shape, nb_epochs=1000, batch_size=128, lr=0.01, n_layers=1,
                 fp.write(str(val) + "\t")
             fp.write('\n')
 
+
+def deletefile():
+    return
+
 if __name__ == '__main__':
-    for i in range(len(values)):
-        for j in range(9):
-            for k in range(len(allcodes)):
-                value = values[i]
-                days_for_test = (j+1)*10
-                _testcode = allcodes[k]
-                output = open('data.txt', 'a')
-                output.write("当前股票: "+str(_testcode)+"测试天数: "+str(days_for_test)+"阈值 :"+ str(value)+"\n")
-                output.close()
-                code = _testcode
-                operation = "train"
+    
+    # for i in range(len(values)):
+    #     for j in range(9):
+    #         for k in range(len(allcodes)):
+    #             tf.reset_default_graph()
+    #             global value
+    #             value=values[i]
+    #             global days_for_test 
+    #             days_for_test= (j+1)*10
+    #             global _testcode 
+    #             _testcode = allcodes[k]
+    #             test(value,_testcode,days_for_test)
 
-                if len(sys.argv) > 1:
-                    operation = sys.argv[1]
-                if operation == "train":
+    #             output = open(filename, 'a')
+    #             output.write("当前股票: "+str(_testcode)+"  测试天数: "+str(days_for_test)+"  阈值 :"+ str(value)+"\n")
+    #             output.close()
+    #             code = _testcode
+    #             operation = "train"
 
-                # make_model([20, 61], 3000, 512, lr=0.001)
-                    featuremain()
-                    make_model(input_shape,500,256,lr=0.001,n_layers=2)
-                    evaluate_model("model."+str(input_shape[0])+".best", code)
-                elif operation == "predict":
-                    evaluate_model("model."+str(input_shape[0])+".best", code)
+    #             if len(sys.argv) > 1:
+    #                 operation = sys.argv[1]
+    #             if operation == "train":
 
-                else:
-                    print("Usage: gossip.py [train | predict]")
-            output = open('data.txt', 'a')
-            output.write("\n当前股票: "+str(_testcode)+"结束\n")
-            output.close()
-        output = open('data.txt', 'a')
-        output.write("\n当前测试天数: "+str(days_for_test)+"结束\n")
-        output.close()
-    output = open('data.txt', 'a')
-    output.write("\n阈值: "+str(value)+"结束\n")
+    #             # make_model([20, 61], 3000, 512, lr=0.001)
+    #                 featuremain()
+    #                 make_model(input_shape_mine,10,256,lr=0.001,n_layers=2)
+    #                 evaluate_model("model."+str(input_shape_mine[0])+".best", code)
+    #             elif operation == "predict":
+    #                 evaluate_model("model."+str(input_shape_mine[0])+".best", code)
+
+    #             else:
+    #                 print("Usage: gossip.py [train | predict]")
+                
+
+    #             onlyfiles = [ f for f in listdir(r'/Users/zhangcong/Downloads/DeepTrade_keras-master/') if isfile(join(r'/Users/zhangcong/Downloads/DeepTrade_keras-master/',f)) ]
+    #             for file in onlyfiles:
+    #                 if file.split("\\")[-1].find("70")!=-1 :
+    #                     os.remove(file)
+
+
+                
+    #     output = open(filename, 'a')
+    #     output.write("\n当前测试天数: "+str(days_for_test)+" 结束\n")
+    #     output.close()
+    # output = open(filename, 'a')
+    # output.write("\n阈值: "+str(value)+" 结束\n")
+    # output.close()
+
+
+
+    tf.reset_default_graph()
+    operation = sys.argv[1]
+
+    global value
+    value=float(sys.argv[1])
+    global days_for_test 
+    days_for_test= int(sys.argv[3])
+    global _testcode 
+    _testcode = sys.argv[2]
+    test(value,_testcode,days_for_test)
+
+    output = open(filename, 'a')
+    output.write("当前股票: "+str(_testcode)+"  测试天数: "+str(days_for_test)+"  阈值 :"+ str(value)+"    ")
     output.close()
+    code = _testcode
+    operation = "train"
+
+    if operation == "train":
+
+        # make_model([20, 61], 3000, 512, lr=0.001)
+        featuremain()
+        make_model(input_shape_mine,250,256,lr=0.001,n_layers=2)
+        evaluate_model("model."+str(input_shape_mine[0])+".best", code)
+    elif operation == "predict":
+         evaluate_model("model."+str(input_shape_mine[0])+".best", code)
+
+    else:
+        print("Usage: gossip.py [train | predict]")
+                
+
+    onlyfiles = [ f for f in listdir(r'/Users/zhangcong/Downloads/DeepTrade_keras-master/') if isfile(join(r'/Users/zhangcong/Downloads/DeepTrade_keras-master/',f)) ]
+    for file in onlyfiles:
+        if file.split("\\")[-1].find("70")!=-1 :
+            os.remove(file)
 
         
