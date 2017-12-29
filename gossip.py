@@ -25,7 +25,8 @@ from os import listdir
 from os.path import isfile, join
 import os
 import tensorflow as tf
-curtime = time.strftime("%Y-%m-%d", time.localtime())
+import datetime
+curtime = (datetime.datetime.now()+datetime.timedelta(hours=8)).strftime("%Y-%m-%d")
 filename = "data_"+curtime+".txt"
 
 def read_ultimate(path, input_shape):
@@ -93,23 +94,27 @@ def evaluate_model(model_path, code, input_shape=input_shape_mine):
     print('Test loss:', scores[0])
     print('test accuracy:', scores[1])
     pred = saved_wp.predict(test_set.images, 1024)
-    cr = calculate_cumulative_return(test_set.labels, pred)
-    hold = []
-    for i in range(len(test_set.labels)):
-        temp = 1
-        for j in range(i):
-            temp = temp*(1+test_set.labels[j])
-        hold.append(temp-1)
+    global value
+    for avalue in values:
+        value = avalue
+        cr = calculate_cumulative_return(test_set.labels, pred)
+        hold = []
+        for i in range(len(test_set.labels)):
+            temp = 1
+            for j in range(i):
+                temp = temp*(1+test_set.labels[j])
+            hold.append(temp-1)
     
-    hold.append(0)
-    print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
-    for i in range(1,len(test_set.labels)):
-        print(str(round(test_set.labels[i]*100,3)) + "\t" + str(round(pred[i],2)) + "\t" + str(round(cr[i]*100,3)) + "\t" + str(round((cr[i]-cr[i-1])*100,3)) + "\t" + str(round(hold[i+1]*100,3)))
-        if i == len(test_set.labels)-2:
-            output = open(filename, 'a')
-            output.write("预计收益: "+str(round(cr[i]*100,3))+"  持续持有收益: "+str(round(hold[i+1]*100,3))+"  差别收益 :"+ str((round(cr[i]*100,3)) - (round(hold[i+1]*100,3)) )+"\n")
-            output.close()
-    print('endtrance')
+        hold.append(0)
+        print("changeRate\tpositionAdvice\tprincipal\tcumulativeReturn")
+        for i in range(1,len(test_set.labels)):
+            print(str(round(test_set.labels[i]*100,3)) + "\t" + str(round(pred[i],2)) + "\t" + str(round(cr[i]*100,3)) + "\t" + str(round((cr[i]-cr[i-1])*100,3)) + "\t" + str(round(hold[i+1]*100,3)))
+            if i == len(test_set.labels)-2:
+                filename = "data_"+curtime+"_"+str(value)+".txt"
+                output = open(filename, 'a')
+                output.write("预计收益: "+str(round(cr[i]*100,3))+"  持续持有收益: "+str(round(hold[i+1]*100,3))+"  差别收益 :"+ str((round(cr[i]*100,3)) - (round(hold[i+1]*100,3)) )+"\n")
+                output.close()         
+        print('endtrance')
 
 
 def make_model(input_shape, nb_epochs=1000, batch_size=128, lr=0.01, n_layers=1, n_hidden=16, rate_dropout=0.3):
@@ -206,10 +211,12 @@ if __name__ == '__main__':
     global _testcode 
     _testcode = sys.argv[2]
     test(value,_testcode,days_for_test)
+    for avalue in values:
+        filename = "data_"+curtime+"_"+str(avalue)+".txt"
+        output = open(filename, 'a')
+        output.write("当前股票: "+str(_testcode)+"  测试天数: "+str(days_for_test)+"  阈值 :"+ str(avalue)+"    ")
+        output.close()
 
-    output = open(filename, 'a')
-    output.write("当前股票: "+str(_testcode)+"  测试天数: "+str(days_for_test)+"  阈值 :"+ str(value)+"    ")
-    output.close()
     code = _testcode
     operation = "train"
 
@@ -217,7 +224,7 @@ if __name__ == '__main__':
 
         # make_model([20, 61], 3000, 512, lr=0.001)
         featuremain()
-        make_model(input_shape_mine,250,256,lr=0.001,n_layers=2)
+        make_model(input_shape_mine,250,256,lr=0.001,n_layers=3)
         evaluate_model("model."+str(input_shape_mine[0])+".best", code)
     elif operation == "predict":
          evaluate_model("model."+str(input_shape_mine[0])+".best", code)

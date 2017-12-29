@@ -24,14 +24,16 @@ import numpy
 
 
 value = -0.2
-values = [-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4]
+values = [-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4]
 
 _testcode = '002594'
 # testcodes = ['600176','002594','000725','600582','600050','600036','002456','002415']
 testcodes = [_testcode]
-trance_codes = ['sh','sz','hs300']
-# trance_codes = ['sh','hs300']
-# trance_codes = ['sz','sz50']
+#一定要多加一条数据,因为bug  之前没有用
+# trance_codes = ['sh']
+trance_codes = ['sh','sz','hs300','sh']
+# trance_codes = ['sh','hs300','sh']
+# trance_codes = ['sz','sz50','sh']
 
 allcodes = ['600176','002594','000725','600582','600050','600036','002456','002415']
 
